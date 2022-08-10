@@ -1,26 +1,36 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png" />
-  <HelloWorld msg="Welcome to Your Vue.js App" />
+  <div class="app">
+    <Editor v-model="state"></Editor>
+  </div>
 </template>
 
 <script>
-import HelloWorld from "./components/HelloWorld.vue";
-
+import data from "./data.json";
+import { ref } from "@vue/reactivity";
+import Editor from "./packages/editor";
+import { registerConfig } from "./utils/editor-config";
+import { provide } from "vue";
 export default {
-  name: "App",
   components: {
-    HelloWorld,
+    Editor,
+  },
+  setup() {
+    const state = ref(data);
+    provide("config", registerConfig); //将组件配置直接提供给子后代使用
+    return {
+      state,
+    };
   },
 };
 </script>
 
 <style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+.app {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  right: 20px;
+  left: 20px;
+  height: 100%;
 }
 </style>
