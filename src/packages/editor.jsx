@@ -1,7 +1,17 @@
-import { computed, defineComponent, inject, reactive, ref } from "vue";
+import {
+  computed,
+  defineComponent,
+  inject,
+  onUnmounted,
+  reactive,
+  ref,
+} from "vue";
 import deepcopy from "deepcopy";
 import "./editor.scss";
 import EditorBlock from "./editor-block";
+import { ElButton } from "element-plus";
+import { events } from "./event";
+import { $dialog } from "../components/Dialog";
 export default defineComponent({
   props: {
     modelValue: { type: Object },
@@ -69,6 +79,7 @@ export default defineComponent({
       containerRef.value.addEventListener("dragleave", dragleave);
       containerRef.value.addEventListener("drop", drop);
       currentComponent = component;
+      events.emit("start");
     };
 
     const dragend = () => {
@@ -76,6 +87,7 @@ export default defineComponent({
       containerRef.value.removeEventListener("dragover", dragover);
       containerRef.value.removeEventListener("dragleave", dragleave);
       containerRef.value.removeEventListener("drop", drop);
+      events.emit("end");
     };
 
     const clearOtherBlockFocus = () => {
@@ -121,9 +133,14 @@ export default defineComponent({
     let dragState = {
       startX: 0,
       startY: 0,
+      dragging: false, //默认没有在拖拽
     };
     const mousemove = (e) => {
       let { clientX: moveX, clientY: moveY } = e;
+      if (!dragState.dragging) {
+        dragState.dragging = true;
+        events.emit("start");
+      }
       // 计算当前元素最新的left和top,曲线里面展示找到线
       let left = moveX - dragState.startX + dragState.startLeft;
       let top = moveY - dragState.startY + dragState.startTop;
@@ -160,7 +177,13 @@ export default defineComponent({
     const mouseup = () => {
       document.removeEventListener("mousemove", mousemove);
       document.removeEventListener("mouseup", mouseup);
+      markline.x = null;
+      markline.y = null;
+      if (dragState.dragging) {
+        events.emit("end");
+      }
     };
+    // 组件按下的时候记录初始状态
     const mousedown = (e) => {
       const { width: BWidth, height: BHeight } = lastSelectBlock.value;
       dragState = {
@@ -168,6 +191,7 @@ export default defineComponent({
         startY: e.clientY,
         startLeft: lastSelectBlock.value.left,
         startTop: lastSelectBlock.value.top,
+        dragging: false,
         startPosition: focusData.value.focus.map(({ top, left }) => ({
           top,
           left,
@@ -232,6 +256,192 @@ export default defineComponent({
       selectIndex.value = -1;
     };
 
+    const useCommand = () => {
+      // 前进后退的指针
+      const state = {
+        current: -1,
+        queue: [], // 存放用户执行的画布上的所有拖拽的操作
+        commands: {}, // 操作命令和执行功能的一个映射表
+        commandArray: [], // 存放所有命令 后退、重做
+        destroyArray: [],
+      };
+      const registry = (command) => {
+        state.commandArray.push(command);
+        state.commands[command.name] = function (...args) {
+          const { redo, undo } = command.execute(...args);
+          redo();
+          if (!command.pushQueue) return;
+          let { queue, current } = state;
+          if (queue.length > 0) {
+            // 可能在放的过程中有撤销操作
+            queue = queue.slice(0, current + 1);
+            state.queue = queue;
+          }
+          queue.push({ redo, undo });
+          state.current = current + 1;
+        };
+      };
+      registry({
+        name: "redo",
+        keyboard: "ctrl+y",
+        execute() {
+          return {
+            redo: function () {
+              let item = state.queue[state.current + 1];
+              if (item) {
+                item.redo && item.redo();
+                state.current++;
+              }
+            },
+          };
+        },
+      });
+      registry({
+        name: "undo",
+        keyboard: "ctrl+z",
+        execute() {
+          return {
+            redo: function () {
+              if (state.current == -1) return;
+              let item = state.queue[state.current];
+              if (item) {
+                item.undo && item.undo();
+                state.current--;
+              }
+            },
+          };
+        },
+      });
+      registry({
+        name: "drag",
+        pushQueue: true,
+        init() {
+          this.before = null;
+          // 监控拖拽开始事件，保存状态
+          const start = () => {
+            this.before = deepcopy(data.value.blocks);
+          };
+          // 拖拽之后需要出发对应的指令
+          const end = () => {
+            state.commands.drag();
+          };
+          events.on("start", start);
+          events.on("end", end);
+          return () => {
+            events.off("start");
+            events.off("end");
+          };
+        },
+        execute() {
+          let before = this.before;
+          let after = data.value.blocks;
+          return {
+            redo() {
+              data.value = { ...data.value, blocks: after };
+            },
+            undo() {
+              data.value = { ...data.value, blocks: before };
+            },
+          };
+        },
+      });
+      registry({
+        name: "updateContainer",
+        pushQueue: true,
+        execute(newValue) {
+          let state = {
+            befor: data.value,
+            after: newValue,
+          };
+          return {
+            redo: () => {
+              data.value = state.after;
+            },
+            undo: () => {
+              data.value = state.befor;
+            },
+          };
+        },
+      });
+      const keyboardEvent = (() => {
+        const KeyCodes = {
+          90: "z",
+          89: "y",
+        };
+        const onKeydown = (e) => {
+          const { ctrlKey, keyCode } = e;
+          let keyString = [];
+          if (ctrlKey) keyString.push("ctrl");
+          keyString.push(KeyCodes[keyCode]);
+          keyString = keyString.join("+");
+          state.commandArray.forEach(({ keyboard, name }) => {
+            if (!keyboard) return;
+            if (keyboard === keyString) {
+              state.commands[name]();
+              e.preventDefault();
+            }
+          });
+        };
+        const init = () => {
+          window.addEventListener("keydown", onKeydown);
+          return () => {
+            window.removeEventListener("keydown", onKeydown);
+          };
+        };
+        return init;
+      })();
+      (() => {
+        // 监听键盘事件
+        state.destroyArray.push(keyboardEvent());
+        state.commandArray.forEach(
+          (command) => command.init && state.destroyArray.push(command.init())
+        );
+      })();
+      onUnmounted(() => {
+        // 组件销毁清理绑定事件
+        state.destroyArray.forEach((fn) => fn && fn());
+      });
+      return state;
+    };
+    let { commands } = useCommand();
+    const buttons = [
+      {
+        label: "撤销",
+        handler: () => {
+          commands.undo();
+        },
+      },
+      {
+        label: "前进",
+        handler: () => {
+          commands.redo();
+        },
+      },
+      {
+        label: "导出json",
+        handler: () => {
+          $dialog({
+            title: "",
+            content: JSON.stringify(data.value),
+          });
+        },
+      },
+      {
+        label: "导入",
+        handler: () => {
+          $dialog({
+            title: "导入json",
+            content: "",
+            footer: true,
+            onConfirm(text) {
+              commands.updateContainer(JSON.parse(text));
+            },
+          });
+        },
+      },
+      {},
+    ];
+
     return () => (
       <div class="editor">
         <div class="editor-left">
@@ -248,7 +458,11 @@ export default defineComponent({
             </div>
           ))}
         </div>
-        <div class="editor-top">顶部</div>
+        <div class="editor-top">
+          {buttons.map((btn) => (
+            <ElButton onClick={btn.handler}>{btn.label}</ElButton>
+          ))}
+        </div>
         <div class="editor-right">右</div>
         <div class="editor-container">
           {/* 负责产生滚动条 */}

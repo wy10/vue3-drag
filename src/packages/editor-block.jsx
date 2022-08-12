@@ -23,6 +23,7 @@ export default defineComponent({
     const blockRef = ref(null);
     onMounted(() => {
       let { offsetWidth, offsetHeight } = blockRef.value;
+      // 只有在数据第一次渲染的时候才需要重新结算距离，第二次数组重新渲染的时候，以前的老数据不需要在重新计算了
       if (data.value.alignCenter) {
         data.value.left = data.value.left - offsetWidth / 2;
         data.value.top = data.value.top - offsetHeight / 2;
