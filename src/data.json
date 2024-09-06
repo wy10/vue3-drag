@@ -1,11 +1,10 @@
 {
   "container":{
-    "width": 1000,
-    "height": 800
+    "width": 500,
+    "height": 500
   },
   "blocks": [
-    {"top":100,"left":100,"zIndex":1,"key":"text"},
-    {"top":200,"left":200,"zIndex":1,"key":"button"},
-    {"top":300,"left":300,"zIndex":1,"key":"input"}
+    {"id":1,"top":0,"left":200,"zIndex":1,"compName":"el-button","width":64,"height":21},
+    {"id":2,"top":100,"left":100,"zIndex":1,"compName":"el-input","width":98,"height":40}
   ]
 }

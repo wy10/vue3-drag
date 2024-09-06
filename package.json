@@ -1,31 +1,22 @@
 {
-  "name": "vue-keshihua",
-  "version": "0.1.0",
-  "private": true,
+  "name": "vue3-tuozhuai",
+  "version": "1.0.0",
+  "description": "```\r npm install\r ```",
+  "main": "index.js",
   "scripts": {
-    "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "vite"
   },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
   "dependencies": {
-    "core-js": "^3.6.5",
-    "deepcopy": "^2.1.0",
-    "element-plus": "^2.2.12",
-    "mitt": "^3.0.0",
-    "vue": "^3.0.0"
+    "element-plus": "^2.8.1",
+    "less": "^4.2.0",
+    "vue": "^3.2.26"
   },
   "devDependencies": {
-    "@vue/cli-plugin-babel": "~4.5.13",
-    "@vue/cli-plugin-eslint": "~4.5.13",
-    "@vue/cli-service": "~4.5.13",
-    "@vue/compiler-sfc": "^3.0.0",
-    "@vue/eslint-config-prettier": "^6.0.0",
-    "babel-eslint": "^10.1.0",
-    "eslint": "^6.7.2",
-    "eslint-plugin-prettier": "^3.3.1",
-    "eslint-plugin-vue": "^7.0.0",
-    "node-sass": "^6.0.0",
-    "prettier": "^2.2.1",
-    "sass-loader": "^10.0.0"
+    "@vitejs/plugin-vue": "^2.2.0",
+    "vite": "^2.8.1"
   }
 }
