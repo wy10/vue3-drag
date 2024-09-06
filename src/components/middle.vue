@@ -27,6 +27,8 @@ const containerStyle = computed(()=>{
         height:jsonData.value.container.height + 'px',
         border:'1px solid #ccc',
         borderRadius:'3px',
+        padding:'5px',
+        position:'relative'
     }
 })
 
@@ -35,7 +37,7 @@ const blocks = computed(()=>{
 })
 
 const renderBlock = (item,index) =>{
-    jsonData.value.blocks[index] = item
+    // jsonData.value.blocks[index] = item
 }
 
 const blockMousedown = (e) => {

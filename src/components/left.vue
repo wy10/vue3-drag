@@ -1,12 +1,11 @@
 <template>
   <el-card v-for="item in compObj" :key="item.compName" >
     <template #header>{{item.title}}</template>
-    <component 
-      :is="item.compName" 
+    <div 
       draggable="true"
       @dragstart="start(item)"
       @dragend="end"
-    >{{item.title}}</component>
+    >{{item.preview()}}</div>
   </el-card>
 </template>
 <script setup>

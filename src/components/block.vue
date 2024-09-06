@@ -1,14 +1,11 @@
 <template>
   <div
-    ref="blockRef"
     :style="blockStyle"
     :class="{ 'block-focus': block.focus }"
     @mousedown="mousedown"
     @click.stop
- 
   >
-    <component :is="block.compName" :key="block.compName">
-      {{ compObj[block.compName].title }}
+    <component :is="block.compName" :key="block.compName" ref="blockRef" style="width:100%;height:100%">
     </component>
   </div>
 </template>
@@ -32,6 +29,10 @@ const blockStyle = computed(() => {
     position: "absolute",
     top: props.block.top + "px",
     left: props.block.left + "px",
+    width: props.block.width + "px",
+    height: props.block.height + "px",
+    "pointer-events": "none",
+    overflow:'hidden'
   };
 });
 
@@ -55,8 +56,8 @@ const mousedown = (e) => {
     props.block.focus = !props.block.focus;
     focusBlocks.value = [props.block];
   }
-  focusBlocks.value = jsonData.value.blocks.filter(item=>item.focus)
-  emits("blockMousedown",e);
+  focusBlocks.value = jsonData.value.blocks.filter((item) => item.focus);
+  emits("blockMousedown", e);
 };
 
 onMounted(() => {

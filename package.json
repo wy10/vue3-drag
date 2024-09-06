@@ -11,6 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "echarts": "^5.5.1",
     "element-plus": "^2.8.1",
     "less": "^4.2.0",
     "vue": "^3.2.26"
