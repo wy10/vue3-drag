@@ -5,13 +5,14 @@
     @mousedown="mousedown"
     @click.stop
   >
-    <component :is="block.compName" :key="block.compName" ref="blockRef" style="width:100%;height:100%">
+    <h3>{{compData[0].value}}</h3>
+    <component :is="block.compName" :key="block.compName" ref="blockRef"  style="height:100%;width:100%">
     </component>
   </div>
 </template>
 <script setup>
 import { computed, ref, inject, onMounted } from "vue";
-import { focusBlocks, blockOffset } from "../hooks/useHooks";
+import { focusBlocks } from "../hooks/useHooks";
 
 const emits = defineEmits(["renderBlock", "blockMousedown"]);
 const compObj = inject("comps");
@@ -24,6 +25,10 @@ const props = defineProps({
 
 const blockRef = ref();
 
+const compData = computed(()=>{
+  return compObj.value[props.block.compName].compData
+})
+
 const blockStyle = computed(() => {
   return {
     position: "absolute",
@@ -31,33 +36,15 @@ const blockStyle = computed(() => {
     left: props.block.left + "px",
     width: props.block.width + "px",
     height: props.block.height + "px",
-    "pointer-events": "none",
+    "pointer-events": props.block.pointerEvent,
     overflow:'hidden'
   };
 });
 
-const clearAllFocus = () => {
-  jsonData.value.blocks.forEach((item) => {
-    item.focus = false;
-  });
-};
+
 
 const mousedown = (e) => {
-  if (e.shiftKey) {
-    props.block.focus = !props.block.focus;
-    // if (props.block.focus) {
-    //   focusBlocks.value.push(props.block);
-    // } else {
-    //   let index = focusBlocks.value.find((item) => item.id === props.block.id);
-    //   focusBlocks.value.splice(index, 1);
-    // }
-  } else {
-    clearAllFocus();
-    props.block.focus = !props.block.focus;
-    focusBlocks.value = [props.block];
-  }
-  focusBlocks.value = jsonData.value.blocks.filter((item) => item.focus);
-  emits("blockMousedown", e);
+  emits("blockMousedown", e,compObj.value[props.block.compName],props.block);
 };
 
 onMounted(() => {

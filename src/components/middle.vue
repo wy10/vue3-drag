@@ -14,7 +14,7 @@
 </template>
 <script setup>
 import { computed, inject, nextTick, render,ref } from "vue"
-import { focusBlocks, blockOffset } from "../hooks/useHooks";
+import { currentComp, focusBlocks } from "../hooks/useHooks";
 import Block from './block.vue'
 
 const jsonData = defineModel()
@@ -39,8 +39,12 @@ const blocks = computed(()=>{
 const renderBlock = (item,index) =>{
     // jsonData.value.blocks[index] = item
 }
-
-const blockMousedown = (e) => {
+const clearAllFocus = () => {
+  jsonData.value.blocks.forEach((item) => {
+    item.focus = false;
+  });
+};
+const blockMousedown = (e,item,comp) => {
   startPositon = {
     x:e.clientX,
     y:e.clientY,
@@ -51,19 +55,24 @@ const blockMousedown = (e) => {
         }
     })
   }
+  console.log(item,blocks.value)
+  let block = blocks.value.find(v=>v.id === comp.id)
+  clearAllFocus()
+  block.focus = true
+  currentComp.value = item
   document.addEventListener("mousemove", blockMousemove);
   document.addEventListener('mouseup', mouseUpHandler);
 };
 const blockMousemove = (e) => {
-  let { clientX,clientY} = e
-  const offsetX = startPositon.x - clientX
-  const offsetY = startPositon.y - clientY
+  // let { clientX,clientY} = e
+  // const offsetX = startPositon.x - clientX
+  // const offsetY = startPositon.y - clientY
 
-  // 拿到偏移量，计算物体新位置
-  focusBlocks.value.forEach((item,index)=>{
-    item.top = startPositon.pos[index].top - offsetY
-    item.left = startPositon.pos[index].left - offsetX
-  })
+  // // 拿到偏移量，计算物体新位置
+  // focusBlocks.value.forEach((item,index)=>{
+  //   item.top = startPositon.pos[index].top - offsetY
+  //   item.left = startPositon.pos[index].left - offsetX
+  // })
 };
 
 const mouseUpHandler = (e) => {
