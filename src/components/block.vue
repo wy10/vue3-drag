@@ -5,17 +5,16 @@
     @mousedown="mousedown"
     @click.stop
   >
-    <h3>{{compData[0].value}}</h3>
+    <h3>{{compDataProps.title.value}}</h3>
     <component :is="block.compName" :key="block.compName" ref="blockRef"  style="height:100%;width:100%">
     </component>
   </div>
 </template>
 <script setup>
-import { computed, ref, inject, onMounted } from "vue";
+import { computed, ref, inject, onMounted, toRef } from "vue";
 import { focusBlocks } from "../hooks/useHooks";
 
 const emits = defineEmits(["renderBlock", "blockMousedown"]);
-const compObj = inject("comps");
 const jsonData = inject("jsonData");
 
 const props = defineProps({
@@ -23,11 +22,16 @@ const props = defineProps({
   index: {},
 });
 
+
 const blockRef = ref();
 
 const compData = computed(()=>{
-  return compObj.value[props.block.compName].compData
+  return props.block.compData
 })
+
+console.log(compData.value)
+
+const compDataProps = toRef(compData.value,'props')
 
 const blockStyle = computed(() => {
   return {
@@ -44,7 +48,7 @@ const blockStyle = computed(() => {
 
 
 const mousedown = (e) => {
-  emits("blockMousedown", e,compObj.value[props.block.compName],props.block);
+  emits("blockMousedown", e,props.block);
 };
 
 onMounted(() => {

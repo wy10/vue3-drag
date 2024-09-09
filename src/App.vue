@@ -11,7 +11,7 @@
       ></div>
     </div>
     <div>
-      <Right v-model="currentComp.compData" v-if="currentComp" />
+      <Right v-model="currentComp.compData.props" v-if="currentComp" />
     </div>
   </div>
 </template>
@@ -80,6 +80,7 @@ const renderContent = {
         compName: currMoveBlock.value.compName,
         width: x,
         height: block.height,
+        compData:JSON.parse(JSON.stringify(currMoveBlock.value))
       });
       block.left = block.left + x;
       block.width = x;
@@ -94,6 +95,7 @@ const renderContent = {
         compName: currMoveBlock.value.compName,
         width: block.width,
         height: y,
+        compData:JSON.parse(JSON.stringify(currMoveBlock.value))
       });
       block.top = block.top + y;
       block.height = y;
@@ -107,6 +109,7 @@ const renderContent = {
         compName: currMoveBlock.value.compName,
         width: x,
         height: block.height,
+        compData:JSON.parse(JSON.stringify(currMoveBlock.value))
       });
       block.width = x;
     },
@@ -119,6 +122,7 @@ const renderContent = {
         compName: currMoveBlock.value.compName,
         width: block.width,
         height: y,
+        compData:JSON.parse(JSON.stringify(currMoveBlock.value))
       });
       block.height = y;
     },
@@ -243,11 +247,12 @@ onMounted(() => {
         compName: currMoveBlock.value.compName,
         width: jsonData.value.container.width,
         height: jsonData.value.container.height,
+        compData:JSON.parse(JSON.stringify(currMoveBlock.value))
       });
     }else{
       justPosition(e,'block');
     }
-    currentComp.value = comps.value[blocks[blocks.length -1].compName] 
+    currentComp.value = blocks[blocks.length -1]
     // 自由移动
     // jsonData.value.blocks.push({
     //   top: e.offsetY,

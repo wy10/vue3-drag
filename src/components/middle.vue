@@ -44,7 +44,7 @@ const clearAllFocus = () => {
     item.focus = false;
   });
 };
-const blockMousedown = (e,item,comp) => {
+const blockMousedown = (e,comp) => {
   startPositon = {
     x:e.clientX,
     y:e.clientY,
@@ -55,11 +55,10 @@ const blockMousedown = (e,item,comp) => {
         }
     })
   }
-  console.log(item,blocks.value)
-  let block = blocks.value.find(v=>v.id === comp.id)
+  comp.focus = true
   clearAllFocus()
-  block.focus = true
-  currentComp.value = item
+  comp.focus = true
+  currentComp.value = comp
   document.addEventListener("mousemove", blockMousemove);
   document.addEventListener('mouseup', mouseUpHandler);
 };

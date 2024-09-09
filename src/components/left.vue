@@ -1,10 +1,10 @@
 <template>
-  <el-card v-for="item in compObj" :key="item.compName" >
+  <el-card v-for="item in comps" :key="item.compName" >
     <template #header>{{item.title}}</template>
     <div 
       draggable="true"
-      @dragstart="start(item)"
-      @dragend="end"
+      @dragstart="()=>emits('start',item)"
+      @dragend="()=>emits('end',null)"
     >{{item.preview()}}</div>
   </el-card>
 </template>
@@ -12,17 +12,7 @@
 import { inject, ref,onMounted } from "vue";
 
 const emits = defineEmits(['start','end'])
-const compObj  = inject('comps')
+const comps  = inject('comps')
 
-const currentMove = ref(null)
-
-const start = (item)=>{
-  currentMove.value = item
-  emits('start',item)
-}
-const end = () =>{
-  currentMove.value = null
-   emits('end',null)
-}
 
 </script>
