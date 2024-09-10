@@ -3,9 +3,12 @@
   "version": "1.0.0",
   "description": "```\r npm install\r ```",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "vite"
+    "dev": "vite",
+    "lint": "eslint src",
+    "prepare": "husky"
   },
   "keywords": [],
   "author": "",
@@ -18,8 +21,12 @@
     "vue": "^3.2.26"
   },
   "devDependencies": {
+    "@eslint/js": "^9.10.0",
     "@vitejs/plugin-vue": "^2.2.0",
     "eslint": "^9.10.0",
+    "eslint-plugin-vue": "^9.28.0",
+    "globals": "^15.9.0",
+    "husky": "^9.1.5",
     "vite": "^2.8.1"
   }
 }

@@ -29,45 +29,42 @@
 //     },
 //   }
 
-
-
 export const leftData = [
-  {
-    title: "table",
-    compName: "trade-table",
-    preview: () => {
-      return "表格";
+    {
+        title: 'table',
+        compName: 'trade-table',
+        preview: () => {
+            return '表格'
+        },
+        props: {
+            title: {
+                type: 'string',
+                require: true,
+                order: '1',
+                configComType: 'el-input',
+                value: '表格',
+            },
+        },
     },
-    props:{
-      title:{
-        type:'string',
-        require:true,
-        order:'1',
-        configComType:'el-input',
-        value:"表格"
-      },
+    {
+        title: 'ECharts',
+        compName: 'trade-echart',
+        preview: () => {
+            return '图表'
+        },
+        props: {
+            title: {
+                type: 'string',
+                require: true,
+                order: '1',
+                configComType: 'el-input',
+                value: '图表',
+            },
+        },
     },
-  },
-  {
-    title: "ECharts",
-    compName: "trade-echart",
-    preview: () => {
-      return "图表";
-    },
-    props:{
-      title:{
-        type:'string',
-        require:true,
-        order:'1',
-        configComType:'el-input',
-        value:"图表"
-      },
-    },
-
-  }
 ]
 
-// const canvas = [ 
+// const canvas = [
 //   {
 //     "id":1,
 //     "top":0,
@@ -105,23 +102,23 @@ export const leftData = [
 //            configComType:'el-date'
 //         }
 //       },
-  
+
 //     }
 //   }
 // ]
 
 const right = [
-  {
-    name:'tableTitle',
-    type:'string',
-    require:true,
-    configComType:'el-input',
-    value:"1111111111"
-  },
-  {
-    name:'date',
-    type:'date',
-    require:true,
-     configComType:'el-date'
-  }
+    {
+        name: 'tableTitle',
+        type: 'string',
+        require: true,
+        configComType: 'el-input',
+        value: '1111111111',
+    },
+    {
+        name: 'date',
+        type: 'date',
+        require: true,
+        configComType: 'el-date',
+    },
 ]
