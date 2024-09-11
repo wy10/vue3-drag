@@ -1,32 +1,36 @@
 {
-  "name": "vue3-tuozhuai",
-  "version": "1.0.0",
-  "description": "```\r npm install\r ```",
-  "main": "index.js",
-  "type": "module",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "vite",
-    "lint": "eslint src",
-    "prepare": "husky"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "echarts": "^5.5.1",
-    "element-plus": "^2.8.1",
-    "less": "^4.2.0",
-    "pinia": "^2.2.2",
-    "vue": "^3.2.26"
-  },
-  "devDependencies": {
-    "@eslint/js": "^9.10.0",
-    "@vitejs/plugin-vue": "^2.2.0",
-    "eslint": "^9.10.0",
-    "eslint-plugin-vue": "^9.28.0",
-    "globals": "^15.9.0",
-    "husky": "^9.1.5",
-    "vite": "^2.8.1"
-  }
+    "name": "vue3-tuozhuai",
+    "version": "1.0.0",
+    "description": "```\r npm install\r ```",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "dev": "vite",
+        "prepare": "husky",
+        "precommit": "lint-staged",
+        "commitlint": "commitlint --config commitlint.config.js"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "echarts": "^5.5.1",
+        "element-plus": "^2.8.1",
+        "less": "^4.2.0",
+        "pinia": "^2.2.2",
+        "vue": "^3.2.26"
+    },
+    "devDependencies": {
+        "@vitejs/plugin-vue": "^2.2.0",
+        "@commitlint/cli": "^19.3.0",
+        "@commitlint/config-conventional": "^19.2.2",
+        "eslint": "^8.49.0",
+        "eslint-config-prettier": "^9.1.0",
+        "eslint-plugin-vue": "^9.28.0",
+        "globals": "^15.9.0",
+        "husky": "^9.1.5",
+        "lint-staged": "^15.2.10",
+        "prettier": "^3.3.3",
+        "vite": "^2.8.1"
+    }
 }
