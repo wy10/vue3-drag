@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+        <script>
+            localStorage.setItem('name', '123')
+            // document.cookie = 'name=123'
+            // document.domain = '127.0.0.1'
+        </script>
+        <style>
+            .box1 {
+                width: 100px;
+                height: 100px;
+                border: 1px solid red;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="box1" style="transform: translate(50px, 50px)">盒子1</div>
+        <div class="box1">盒子1</div>
+    </body>
+</html>

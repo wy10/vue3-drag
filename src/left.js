@@ -33,6 +33,7 @@ export const leftData = [
     {
         title: 'table',
         compName: 'trade-table',
+        type: 'table',
         preview: () => {
             return '表格'
         },
@@ -44,11 +45,16 @@ export const leftData = [
                 configComType: 'el-input',
                 value: '表格',
             },
+            rows: {
+                type: 'number',
+                value: 30,
+            },
         },
     },
     {
         title: 'ECharts',
         compName: 'trade-echart',
+        type: 'echart',
         preview: () => {
             return '图表'
         },

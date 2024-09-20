@@ -3,9 +3,8 @@
         <Block
             v-for="(item, index) in blocks"
             :id="item.compName + index"
-            :key="index"
+            :key="item.id"
             :block="item"
-            :index="index"
             @renderBlock="renderBlock"
             @blockMousedown="blockMousedown"
         >
@@ -13,22 +12,21 @@
     </div>
 </template>
 <script setup>
-import { computed, inject, nextTick, render, ref } from "vue"
-import { currentComp, focusBlocks } from "../hooks/useHooks"
-import Block from "./block.vue"
-
-const jsonData = defineModel()
+import { computed } from 'vue'
+import { currentComp, focusBlocks } from '../hooks/useHooks'
+import Block from './block.vue'
 let startPositon = { x: 0, y: 0 }
+const jsonData = defineModel()
 // const emits = defineEmits(['blockMousedown'])
 
 const containerStyle = computed(() => {
     return {
-        width: jsonData.value.container.width + "px",
-        height: jsonData.value.container.height + "px",
-        border: "1px solid #ccc",
-        borderRadius: "3px",
-        padding: "5px",
-        position: "relative",
+        width: jsonData.value.container.width + 'px',
+        height: jsonData.value.container.height + 'px',
+        border: '1px solid #ccc',
+        borderRadius: '3px',
+        padding: '5px',
+        position: 'relative',
     }
 })
 
@@ -59,8 +57,8 @@ const blockMousedown = (e, comp) => {
     clearAllFocus()
     comp.focus = true
     currentComp.value = comp
-    document.addEventListener("mousemove", blockMousemove)
-    document.addEventListener("mouseup", mouseUpHandler)
+    document.addEventListener('mousemove', blockMousemove)
+    document.addEventListener('mouseup', mouseUpHandler)
 }
 const blockMousemove = (e) => {
     // let { clientX,clientY} = e
@@ -74,8 +72,8 @@ const blockMousemove = (e) => {
 }
 
 const mouseUpHandler = (e) => {
-    document.removeEventListener("mousemove", blockMousemove)
-    document.removeEventListener("mouseup", mouseUpHandler)
+    document.removeEventListener('mousemove', blockMousemove)
+    document.removeEventListener('mouseup', mouseUpHandler)
     startPositon = {
         x: 0,
         y: 0,

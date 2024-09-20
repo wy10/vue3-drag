@@ -5,22 +5,23 @@
         @mousedown="mousedown"
         @click.stop
     >
-        <h3>{{ compDataProps.title.value }}</h3>
+        <div style="height: 20px; overflow: hidden">
+            {{ compDataProps.title.value }}
+        </div>
         <component
             :is="block.compName"
-            :key="block.compName"
             ref="blockRef"
-            style="height: 100%; width: 100%"
+            :id="block.id"
+            style="height: calc(100% - 40px); width: 100%"
+            :filter="compDataProps"
         >
         </component>
     </div>
 </template>
 <script setup>
-import { computed, ref, inject, onMounted, toRef } from "vue"
-import { focusBlocks } from "../hooks/useHooks"
+import { computed, ref, onMounted, toRef, nextTick } from 'vue'
 
-const emits = defineEmits(["renderBlock", "blockMousedown"])
-const jsonData = inject("jsonData")
+const emits = defineEmits(['renderBlock', 'blockMousedown'])
 
 const props = defineProps({
     block: {},
@@ -33,47 +34,53 @@ const compData = computed(() => {
     return props.block.compData
 })
 
-console.log(compData.value)
-
-const compDataProps = toRef(compData.value, "props")
+const compDataProps = toRef(compData.value, 'props')
 
 const blockStyle = computed(() => {
     return {
-        position: "absolute",
-        top: props.block.top + "px",
-        left: props.block.left + "px",
-        width: props.block.width + "px",
-        height: props.block.height + "px",
-        "pointer-events": props.block.pointerEvent,
-        overflow: "hidden",
+        position: 'absolute',
+        top: props.block.top + 'px',
+        left: props.block.left + 'px',
+        width: props.block.width + 'px',
+        height: props.block.height + 'px',
+        'pointer-events': props.block.pointerEvent,
+        overflow: 'hidden',
     }
 })
 
 const mousedown = (e) => {
-    emits("blockMousedown", e, props.block)
+    emits('blockMousedown', e, props.block)
 }
 
 onMounted(() => {
     if (props.block.alignCenter) {
         const { offsetWidth, offsetHeight } = blockRef.value
-        emits(
-            "renderBlock",
-            {
-                ...props.block,
-                top: props.block.top - offsetHeight / 2,
-                left: props.block.left - offsetWidth / 2,
-                width: offsetWidth,
-                height: offsetHeight,
-                alignCenter: false,
-            },
-            props.index,
-        )
+        emits('renderBlock', {
+            ...props.block,
+            top: props.block.top - offsetHeight / 2,
+            left: props.block.left - offsetWidth / 2,
+            width: offsetWidth,
+            height: offsetHeight,
+            alignCenter: false,
+        })
+    }
+    console.log(props.block)
+    if (props.block.compData.type === 'echart') {
+        const watchChartWc = new ResizeObserver(() => {
+            nextTick(() => {
+                blockRef.value.chart.resize()
+            })
+        })
+
+        // 使用observe开启监听, onObserve可以取消监听
+        watchChartWc.observe(document.getElementById(props.block.id))
     }
 })
 </script>
 <style lang="less" scoped>
 .block-focus {
     border: 2px dotted red;
+    box-sizing: border-box;
     //  cursor: move;
 }
 </style>
