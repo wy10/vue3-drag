@@ -1,8 +1,8 @@
 <template>
     <div :style="{ ...containerStyle }">
         <Block
-            v-for="(item, index) in blocks"
-            :id="item.compName + index"
+            v-for="item in blocks"
+            :id="item.id"
             :key="item.id"
             :block="item"
             @renderBlock="renderBlock"
@@ -14,9 +14,11 @@
 <script setup>
 import { computed } from 'vue'
 import { currentComp, focusBlocks } from '../hooks/useHooks'
+import { adjustCompLayout } from '../utils/delete'
 import Block from './block.vue'
 let startPositon = { x: 0, y: 0 }
 const jsonData = defineModel()
+let deleteFlag = false
 // const emits = defineEmits(['blockMousedown'])
 
 const containerStyle = computed(() => {
@@ -46,13 +48,12 @@ const blockMousedown = (e, comp) => {
     startPositon = {
         x: e.clientX,
         y: e.clientY,
-        pos: focusBlocks.value.map((item) => {
-            return {
-                left: item.left,
-                top: item.top,
-            }
-        }),
+        pos: {
+            left: comp.left,
+            top: comp.top,
+        },
     }
+
     comp.focus = true
     clearAllFocus()
     comp.focus = true
@@ -61,14 +62,28 @@ const blockMousedown = (e, comp) => {
     document.addEventListener('mouseup', mouseUpHandler)
 }
 const blockMousemove = (e) => {
-    // let { clientX,clientY} = e
+    let { clientX, clientY } = e
     // const offsetX = startPositon.x - clientX
     // const offsetY = startPositon.y - clientY
     // // 拿到偏移量，计算物体新位置
-    // focusBlocks.value.forEach((item,index)=>{
-    //   item.top = startPositon.pos[index].top - offsetY
-    //   item.left = startPositon.pos[index].left - offsetX
-    // })
+    // currentComp.value.top = startPositon.pos.top - offsetY
+    // currentComp.value.left = startPositon.pos.left - offsetX
+
+    const parent = document.getElementById('middle')
+    const parentRect = parent.getBoundingClientRect()
+
+    //检查鼠标是否超出边界
+    if (
+        (clientX < parentRect.left ||
+            clientX > parentRect.right ||
+            clientY < parentRect.top ||
+            clientY > parentRect.bottom) &&
+        currentComp.value
+    ) {
+        deleteFlag = true
+    } else {
+        deleteFlag = false
+    }
 }
 
 const mouseUpHandler = (e) => {
@@ -77,6 +92,20 @@ const mouseUpHandler = (e) => {
     startPositon = {
         x: 0,
         y: 0,
+    }
+    if (deleteFlag) {
+        if (blocks.value.length === 1) {
+            jsonData.value.blocks = []
+            currentComp.value === null
+        } else {
+            adjustCompLayout(currentComp.value, jsonData.value.blocks)
+            let index = blocks.value.findIndex(
+                (item) => item.id === currentComp.value.id,
+            )
+            jsonData.value.blocks.splice(index, 1)
+            currentComp.value === null
+        }
+        deleteFlag = false
     }
 }
 </script>

@@ -6,7 +6,7 @@
         @click.stop
     >
         <div style="height: 20px; overflow: hidden">
-            {{ compDataProps.title.value }}
+            <!-- {{ compDataProps.title.value }} -->
         </div>
         <component
             :is="block.compName"
@@ -31,6 +31,7 @@ const props = defineProps({
 const blockRef = ref()
 
 const compData = computed(() => {
+    console.log(props.block)
     return props.block.compData
 })
 
@@ -64,11 +65,10 @@ onMounted(() => {
             alignCenter: false,
         })
     }
-    console.log(props.block)
     if (props.block.compData.type === 'echart') {
         const watchChartWc = new ResizeObserver(() => {
             nextTick(() => {
-                blockRef.value.chart.resize()
+                blockRef.value && blockRef.value.chart.resize()
             })
         })
 

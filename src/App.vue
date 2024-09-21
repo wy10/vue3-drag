@@ -77,6 +77,7 @@ const renderContent = {
         }
     },
     block: function (block, y, direction) {
+        let id = new Date().getTime() + ''
         let props = {}
         if (currMoveBlock.value.type === 'table') {
             props = {
@@ -89,11 +90,23 @@ const renderContent = {
                 },
             }
         }
-        console.log(props, 'xxxx')
+        ;(block.child && block.child.length === 2) || !block.child
+            ? (block.child = [id])
+            : block.child.push(id)
+        // if (block.child) {
+        //     if (block.child.length === 2) {
+        //         block.child = [id]
+        //     } else {
+        //         block.child.push(id)
+        //     }
+        // } else {
+        //     block.child = [id]
+        // }
         return {
             left: (x, y) => {
                 jsonData.value.blocks.push({
-                    id: new Date().getTime() + '',
+                    id,
+                    parent: block.id,
                     top: block.top,
                     left: block.left,
                     zIndex: 1,
@@ -110,7 +123,8 @@ const renderContent = {
 
             top: (x, y) => {
                 jsonData.value.blocks.push({
-                    id: new Date().getTime() + '',
+                    id,
+                    parent: block.id,
                     top: block.top,
                     left: block.left,
                     zIndex: 1,
@@ -126,7 +140,8 @@ const renderContent = {
             },
             right: (x, y) => {
                 jsonData.value.blocks.push({
-                    id: new Date().getTime() + '',
+                    id,
+                    parent: block.id,
                     top: block.top,
                     left: block.left + x,
                     zIndex: 1,
@@ -141,7 +156,8 @@ const renderContent = {
             },
             bottom: (x, y) => {
                 jsonData.value.blocks.push({
-                    id: new Date().getTime() + '',
+                    id,
+                    parent: block.id,
                     top: block.top + y,
                     left: block.left,
                     zIndex: 1,
