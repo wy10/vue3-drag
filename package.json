@@ -21,15 +21,17 @@
         "vue": "^3.2.26"
     },
     "devDependencies": {
-        "@vitejs/plugin-vue": "^2.2.0",
         "@commitlint/cli": "^19.3.0",
         "@commitlint/config-conventional": "^19.2.2",
+        "@vitejs/plugin-vue": "^2.2.0",
         "eslint": "^8.49.0",
         "eslint-config-prettier": "^9.1.0",
         "eslint-plugin-vue": "^9.28.0",
         "globals": "^15.9.0",
         "husky": "^9.1.5",
         "lint-staged": "^15.2.10",
+        "postcss": "^8.4.47",
+        "postcss-px-to-viewport": "^1.1.1",
         "prettier": "^3.3.3",
         "vite": "^2.8.1"
     }

@@ -32,6 +32,6 @@ const tableData = computed(() => {
 
 <style lang="less">
 .height {
-    line-height: 30px !important;
+    // line-height: 30px !important;
 }
 </style>
