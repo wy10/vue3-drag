@@ -1,4 +1,6 @@
 <template>
+    <div @click="add">+++</div>
+    <div @click="dec">---</div>
     <div class="app" @click="clearAll">
         <div>
             <Left @start="startDrag" @end="endDrag" />
@@ -13,6 +15,14 @@
                 }"
                 v-show="dividerShow"
             ></div>
+            <!-- <div
+                :style="{
+                    height: '2px',
+                    width: '150px',
+                    background: 'red',
+                    cursor: 'row-resize',
+                }"
+            ></div> -->
         </div>
         <div>
             <Right v-model="currentComp.compData.props" v-if="currentComp" />
@@ -20,7 +30,7 @@
     </div>
 </template>
 <script setup>
-import { onMounted, provide, ref } from 'vue'
+import { computed, onMounted, provide, ref } from 'vue'
 import { focusBlocks, currentComp } from './hooks/useHooks'
 import Left from './components/left.vue'
 import Right from './components/right.vue'
@@ -34,11 +44,28 @@ let middleDom = null
 const comps = ref(leftData)
 
 const jsonData = ref(JSON.parse(JSON.stringify(jsonFile)))
+const container = computed(() => {
+    return {
+        width: jsonData.value.container.width,
+        height: jsonData.value.container.height,
+    }
+})
 
 const currMoveBlock = ref(null)
+const add = () => {
+    jsonData.value.container.width += 50
+    jsonData.value.container.height += 50
+}
+
+const dec = () => {
+    jsonData.value.container.width -= 50
+    jsonData.value.container.height -= 50
+}
 
 const renderContent = {
     divider: function (block) {
+        const dividerWidth = block.width * container.value.width
+        const dividerHeight = block.height * container.value.height
         return {
             left: (x, y) => {
                 divider.value = {
@@ -46,7 +73,7 @@ const renderContent = {
                     top: block.top + 'px',
                     left: block.left + x + 'px',
                     width: '0px',
-                    height: block.height + 'px',
+                    height: dividerHeight + 'px',
                 }
             },
             top: (x, y) => {
@@ -54,7 +81,7 @@ const renderContent = {
                     position: 'absolute',
                     top: block.top + y + 'px',
                     left: block.left + 'px',
-                    width: block.width + 'px',
+                    width: dividerWidth + 'px',
                 }
             },
             right: (x, y) => {
@@ -62,7 +89,7 @@ const renderContent = {
                     position: 'absolute',
                     top: block.top + 'px',
                     left: block.left + x + 'px',
-                    height: block.height + 'px',
+                    height: dividerHeight + 'px',
                     width: '0px',
                 }
             },
@@ -71,12 +98,14 @@ const renderContent = {
                     position: 'absolute',
                     top: block.top + y + 'px',
                     left: block.left + 'px',
-                    width: block.width + 'px',
+                    width: dividerWidth + 'px',
                 }
             },
         }
     },
     block: function (block, y, direction) {
+        const blockWidth = block.width * container.value.width
+        const blockHeight = block.height * container.value.height
         let id = new Date().getTime() + ''
         let props = {}
         if (currMoveBlock.value.type === 'table') {
@@ -85,23 +114,12 @@ const renderContent = {
                 rows: {
                     ...currMoveBlock.value.props.rows,
                     value: ['left', 'right'].includes(direction)
-                        ? Math.floor((block.height - 40) / 41)
+                        ? Math.floor((blockHeight - 40) / 41)
                         : Math.floor((y - 40) / 41),
                 },
             }
         }
-        ;(block.child && block.child.length === 2) || !block.child
-            ? (block.child = [id])
-            : block.child.push(id)
-        // if (block.child) {
-        //     if (block.child.length === 2) {
-        //         block.child = [id]
-        //     } else {
-        //         block.child.push(id)
-        //     }
-        // } else {
-        //     block.child = [id]
-        // }
+
         return {
             left: (x, y) => {
                 jsonData.value.blocks.push({
@@ -111,14 +129,14 @@ const renderContent = {
                     left: block.left,
                     zIndex: 1,
                     compName: currMoveBlock.value.compName,
-                    width: x,
+                    width: x / container.value.width,
                     height: block.height,
                     compData: JSON.parse(
                         JSON.stringify({ ...currMoveBlock.value, props }),
                     ),
                 })
                 block.left = block.left + x
-                block.width = x
+                block.width = x / container.value.width
             },
 
             top: (x, y) => {
@@ -130,13 +148,13 @@ const renderContent = {
                     zIndex: 1,
                     compName: currMoveBlock.value.compName,
                     width: block.width,
-                    height: y,
+                    height: y / container.value.height,
                     compData: JSON.parse(
                         JSON.stringify({ ...currMoveBlock.value, props }),
                     ),
                 })
                 block.top = block.top + y
-                block.height = y
+                block.height = y / container.value.height
             },
             right: (x, y) => {
                 jsonData.value.blocks.push({
@@ -146,13 +164,13 @@ const renderContent = {
                     left: block.left + x,
                     zIndex: 1,
                     compName: currMoveBlock.value.compName,
-                    width: x,
+                    width: x / container.value.width,
                     height: block.height,
                     compData: JSON.parse(
                         JSON.stringify({ ...currMoveBlock.value, props }),
                     ),
                 })
-                block.width = x
+                block.width = x / container.value.width
             },
             bottom: (x, y) => {
                 jsonData.value.blocks.push({
@@ -163,12 +181,12 @@ const renderContent = {
                     zIndex: 1,
                     compName: currMoveBlock.value.compName,
                     width: block.width,
-                    height: y,
+                    height: y / container.value.height,
                     compData: JSON.parse(
                         JSON.stringify({ ...currMoveBlock.value, props }),
                     ),
                 })
-                block.height = y
+                block.height = y / container.value.height
             },
         }
     },
@@ -208,8 +226,8 @@ const justPosition = (e, renderType) => {
             // 1. 当前鼠标的范围处于什么组件
             start = { x: blocks[i].left, y: blocks[i].top }
             end = {
-                x: blocks[i].left + blocks[i].width,
-                y: blocks[i].top + blocks[i].height,
+                x: blocks[i].left + blocks[i].width * container.value.width,
+                y: blocks[i].top + blocks[i].height * container.value.height,
             }
             if (
                 e.offsetX >= start.x &&
@@ -222,8 +240,8 @@ const justPosition = (e, renderType) => {
             }
         }
         // 将图形对角线划分
-        let x = block.width / 2
-        let y = block.height / 2
+        let x = (block.width * container.value.width) / 2
+        let y = (block.height * container.value.height) / 2
         let endY = 0
 
         if (e.offsetX < block.left + x) {
@@ -286,8 +304,8 @@ onMounted(() => {
                 left: 0,
                 zIndex: 1,
                 compName: currMoveBlock.value.compName,
-                width: jsonData.value.container.width,
-                height: jsonData.value.container.height,
+                width: 1,
+                height: 1,
                 compData: JSON.parse(JSON.stringify(currMoveBlock.value)),
             })
         } else {

@@ -1,10 +1,15 @@
 <template>
     <div :style="{ ...containerStyle }">
+        <div id="delIcon" class="delIcon" style="display: none"></div>
         <Block
             v-for="item in blocks"
             :id="item.id"
             :key="item.id"
             :block="item"
+            :container="{
+                width: jsonData.container.width,
+                height: jsonData.container.height,
+            }"
             @renderBlock="renderBlock"
             @blockMousedown="blockMousedown"
         >
@@ -44,6 +49,7 @@ const clearAllFocus = () => {
         item.focus = false
     })
 }
+let del = ''
 const blockMousedown = (e, comp) => {
     startPositon = {
         x: e.clientX,
@@ -54,23 +60,30 @@ const blockMousedown = (e, comp) => {
         },
     }
 
-    comp.focus = true
     clearAllFocus()
     comp.focus = true
     currentComp.value = comp
+    currentComp.value.focus = true
+
+    // 显示delIcon,并且icon的位置为鼠标的位置
+    const parent = document.getElementById('middle')
+    const parentRect = parent.getBoundingClientRect()
+    del = document.getElementById('delIcon')
+    del.style.top = e.clientY - parentRect.top + 'px'
+    del.style.left = e.clientX - parentRect.left + 'px'
+    del.style.display = 'block'
+
     document.addEventListener('mousemove', blockMousemove)
     document.addEventListener('mouseup', mouseUpHandler)
 }
 const blockMousemove = (e) => {
     let { clientX, clientY } = e
-    // const offsetX = startPositon.x - clientX
-    // const offsetY = startPositon.y - clientY
-    // // 拿到偏移量，计算物体新位置
-    // currentComp.value.top = startPositon.pos.top - offsetY
-    // currentComp.value.left = startPositon.pos.left - offsetX
 
     const parent = document.getElementById('middle')
     const parentRect = parent.getBoundingClientRect()
+
+    del.style.top = e.clientY - parentRect.top + 'px'
+    del.style.left = e.clientX - parentRect.left + 'px'
 
     //检查鼠标是否超出边界
     if (
@@ -97,8 +110,14 @@ const mouseUpHandler = (e) => {
         if (blocks.value.length === 1) {
             jsonData.value.blocks = []
             currentComp.value === null
+            del.style.display = 'none'
+            del.style.top = 0
+            del.style.left = 0
         } else {
-            adjustCompLayout(currentComp.value, jsonData.value.blocks)
+            adjustCompLayout(currentComp.value, jsonData.value.blocks, {
+                width: jsonData.value.container.width,
+                height: jsonData.value.container.height,
+            })
             let index = blocks.value.findIndex(
                 (item) => item.id === currentComp.value.id,
             )
@@ -107,5 +126,22 @@ const mouseUpHandler = (e) => {
         }
         deleteFlag = false
     }
+    del.style.display = 'none'
+    del.style.top = 0
+    del.style.left = 0
 }
 </script>
+<style lang="less">
+.dragging {
+    width: 10px;
+    height: 10px;
+    background: red;
+}
+.delIcon {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border: 1px dotted red;
+    z-index: 1000;
+}
+</style>

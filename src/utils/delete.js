@@ -43,26 +43,31 @@
 //   },
 // ]
 
-export const adjustCompLayout = (comp, arr) => {
+export const adjustCompLayout = (comp, arr, container) => {
     // 求取comp四条边的坐标范围
     // 上 top ->        [left,left + width]
     // 右 left+width -> [top,top+height]
     // 下 top+height -> [left,left + width]
     // 左 left ->       [top,top+height]
+    const compWidth = comp.width * container.width
+    const compHeight = comp.height * container.height
+
     let borderInfo = {
         top: [],
         right: [],
         bottom: [],
         left: [],
     }
-    let maxRight = comp.left + comp.width
-    let maxHeight = comp.top + comp.height
+    let maxRight = comp.left + compWidth
+    let maxHeight = comp.top + compHeight
 
     for (let i = 0; i < arr.length; i++) {
         let box = arr[i]
+        const boxWidth = box.width * container.width
+        const boxHeight = box.height * container.height
         // console.log(box)
-        let boxMaxRight = box.left + box.width
-        let boxMaxHeight = box.top + box.height
+        let boxMaxRight = box.left + boxWidth
+        let boxMaxHeight = box.top + boxHeight
         // 上边和其他盒子的下边重合情况
         if (
             comp.top === boxMaxHeight &&
@@ -112,24 +117,30 @@ export const adjustCompLayout = (comp, arr) => {
     switch (direction) {
         case 'top':
             minLenArr.forEach((item) => {
-                item.height = item.height + comp.height
+                item.height =
+                    (item.height * container.height + compHeight) /
+                    container.height
             })
             break
         case 'right':
             minLenArr.forEach((item) => {
                 item.left = comp.left
-                item.width = item.width + comp.width
+                item.width =
+                    (item.width * container.width + compWidth) / container.width
             })
             break
         case 'bottom':
             minLenArr.forEach((item) => {
                 item.top = comp.top
-                item.height = item.height + comp.height
+                item.height =
+                    (item.height * container.height + compHeight) /
+                    container.height
             })
             break
         case 'left':
             minLenArr.forEach((item) => {
-                item.width = item.width + comp.width
+                item.width =
+                    (item.width * container.width + compWidth) / container.width
             })
             break
     }
