@@ -5,6 +5,7 @@ import postcsspxtoviewport from 'postcss-px-to-viewport'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+    base: './',
     plugins: [vue()],
     css: {
         postcss: {
@@ -41,7 +42,17 @@ export default defineConfig({
     },
 
     build: {
-        minify: 'true',
+        // minify: 'true',
+        minify: 'terser',
+        cssCodeSplit: true,
+        rollupOptions: {
+            output: {
+                manualChunks: {
+                    'vue-chunck': ['vue'],
+                    'element-plus-chunck': ['element-plus'],
+                },
+            },
+        },
         terserOptions: {
             compress: {
                 //生产环境时移除console
