@@ -1,5 +1,5 @@
 <template>
-    <div ref="myChart" autoresize></div>
+    <div ref="myChart" autoresize style="height: 100%; width: 100%"></div>
 </template>
 
 <script setup>

@@ -113,6 +113,47 @@ export const leftData = [
 //   }
 // ]
 
+// {
+//     "id": 1,
+//     "compName": "trade-table",
+//     "translateX": 0,
+//     "translateY": 0,
+//     "width": 1,
+//     "height": 0.5,
+//     "compData": {}
+// },
+// {
+//     "id": 2,
+//     "compName": "trade-echart",
+//     "translateX": 0,
+//     "translateY": 0,
+//     "width": 0.5,
+//     "height": 0.25,
+//     "compData": {
+//         "type": "echart"
+//     }
+// },
+// {
+//     "id": 4,
+//     "compName": "trade-table",
+//     "translateX": 0,
+//     "translateY": 0,
+//     "width": 0.5,
+//     "height": 0.25,
+//     "compData": {}
+// },
+// {
+//     "id": 3,
+//     "compName": "trade-echart",
+//     "translateX": 0.5,
+//     "translateY": -0.5,
+//     "width": 0.5,
+//     "height": 0.5,
+//     "compData": {
+//         "type": "echart"
+//     }
+// }
+
 const right = [
     {
         name: 'tableTitle',

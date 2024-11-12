@@ -1,8 +1,7 @@
 {
-  "container":{
-    "width": 800,
-    "height": 800
-  },
-  "blocks": [
-  ]
+    "container": {
+        "width": 800,
+        "height": 800
+    },
+    "blocks": []
 }

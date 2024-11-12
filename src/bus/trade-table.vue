@@ -26,7 +26,7 @@ const data = ref(
 )
 
 const tableData = computed(() => {
-    return data.value.slice(0, props.filter.rows.value)
+    return data.value.slice(0, 10)
 })
 </script>
 

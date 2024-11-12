@@ -1,6 +1,16 @@
 <template>
-    <div :style="{ ...containerStyle }">
-        <div id="delIcon" class="delIcon" style="display: none"></div>
+    <div ref="dragContainer">
+        <Block
+            v-for="item in blocks"
+            :id="item.id"
+            :key="item.id"
+            :initX="item.translateX"
+            :initY="item.translateY"
+            :block="item"
+        >
+        </Block>
+    </div>
+    <!-- <div id="delIcon" class="delIcon" style="display: none"></div>
         <Block
             v-for="item in blocks"
             :id="item.id"
@@ -13,16 +23,84 @@
             @renderBlock="renderBlock"
             @blockMousedown="blockMousedown"
         >
-        </Block>
-    </div>
+        </Block> -->
 </template>
 <script setup>
-import { computed } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { currentComp, focusBlocks } from '../hooks/useHooks'
 import { adjustCompLayout } from '../utils/delete'
 import Block from './block.vue'
-let startPositon = { x: 0, y: 0 }
+import DragManager from '../drag/drag-manager'
+import SortManager from '../drag/sort-manager'
+
+const dragContainer = ref(null)
+const currentDrag = ref(null)
+let dragManager = null
+let sortManager = null
+
 const jsonData = defineModel()
+
+const blocks = computed(() => {
+    return jsonData.value.blocks
+})
+
+watch(
+    () => blocks.value.length,
+    () => {
+        nextTick(() => {
+            Array.from(dragContainer.value.children).forEach((dom) => {
+                dragManager.addDrag(
+                    dom,
+                    dom.getAttribute('initX'),
+                    dom.getAttribute('initY'),
+                )
+            })
+        })
+    },
+    {
+        immediate: false,
+    },
+)
+
+onMounted(() => {
+    dragManager = new DragManager({
+        el: dragContainer.value,
+        width: 800,
+        height: 800,
+    })
+    sortManager = new SortManager(dragContainer.value)
+    Array.from(dragContainer.value.children).forEach((dom) => {
+        dragManager.addDrag(
+            dom,
+            dom.getAttribute('initX'),
+            dom.getAttribute('initY'),
+        )
+    })
+    dragManager.on('dragStart', (data) => {
+        // 将这个元素深拷贝，避免拖动过程中被改变
+        currentDrag.value = data.element.cloneNode(true)
+    })
+    dragManager.on('dragEnd', (data) => {
+        sortManager.reorder(data.element, currentDrag.value, (node1, node2) => {
+            const index1 = blocks.value.findIndex((item) => item.id == node1.id)
+            const index2 = blocks.value.findIndex((item) => item.id == node2.id)
+            const temp = { ...jsonData.value.blocks[index1] }
+            jsonData.value.blocks[index1].width =
+                jsonData.value.blocks[index2].width
+            jsonData.value.blocks[index1].height =
+                jsonData.value.blocks[index2].height
+            jsonData.value.blocks[index2].width = temp.width
+            jsonData.value.blocks[index2].height = temp.height
+            ;[jsonData.value.blocks[index1], jsonData.value.blocks[index2]] = [
+                jsonData.value.blocks[index2],
+                jsonData.value.blocks[index1],
+            ]
+        })
+    })
+})
+
+let startPositon = { x: 0, y: 0 }
+
 let deleteFlag = false
 // const emits = defineEmits(['blockMousedown'])
 
@@ -35,10 +113,6 @@ const containerStyle = computed(() => {
         padding: '5px',
         position: 'relative',
     }
-})
-
-const blocks = computed(() => {
-    return jsonData.value.blocks
 })
 
 const renderBlock = (item, index) => {

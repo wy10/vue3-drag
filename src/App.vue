@@ -302,6 +302,8 @@ onMounted(() => {
                 id: new Date().getTime() + '',
                 top: 0,
                 left: 0,
+                translateX: 0,
+                translateY: 0,
                 zIndex: 1,
                 compName: currMoveBlock.value.compName,
                 width: 1,
@@ -334,6 +336,7 @@ onMounted(() => {
     & > div:nth-child(2) {
         flex: 1;
         margin: 10px;
+        border: 1px solid #ccc;
     }
     & > div:last-child {
         width: 300px;

@@ -11,8 +11,8 @@
     </el-card>
 </template>
 <script setup>
-import { inject, ref, onMounted } from "vue"
+import { inject } from 'vue'
 
-const emits = defineEmits(["start", "end"])
-const comps = inject("comps")
+const emits = defineEmits(['start', 'end'])
+const comps = inject('comps')
 </script>
