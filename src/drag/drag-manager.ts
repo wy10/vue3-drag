@@ -1,6 +1,11 @@
 import EventEmitter from './event-emitter'
+type T = {
+    el: HTMLElement | null
+    width: number
+    height: number
+}
 class DragManager extends EventEmitter {
-    public app = {
+    public app: T = {
         el: null,
         width: 0,
         height: 0,
@@ -23,6 +28,26 @@ class DragManager extends EventEmitter {
         this._onDragMove = this.onDragMove.bind(this)
         this._onDragEnd = this.onDragEnd.bind(this)
     }
+
+    public resister() {
+        this.app.el!.addEventListener('dragenter', (e) => {
+            e.dataTransfer!.dropEffect = 'move'
+            this.emit('dragenter', e)
+        })
+        this.app.el!.addEventListener('dragover', (e) => {
+            e.preventDefault()
+            e.dataTransfer!.dropEffect = 'move'
+            this.emit('dragover', e)
+        })
+        this.app.el!.addEventListener('dragleave', (e) => {
+            e.dataTransfer!.dropEffect = 'none'
+            this.emit('dragleave', e)
+        })
+        this.app.el!.addEventListener('drop', (e) => {
+            this.emit('drop', e)
+        })
+    }
+
     public addDrag(dom, initX, initY) {
         this.dragElements.push(dom)
         dom.style.transform = `translate(${initX * this.app.width}px, ${initY * this.app.height}px)`

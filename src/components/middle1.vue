@@ -68,6 +68,8 @@ onMounted(() => {
         width: 800,
         height: 800,
     })
+    // 在父盒子上监听物体移动事件
+    dragManager.resister()
     sortManager = new SortManager(dragContainer.value)
     Array.from(dragContainer.value.children).forEach((dom) => {
         dragManager.addDrag(
@@ -96,6 +98,24 @@ onMounted(() => {
                 jsonData.value.blocks[index1],
             ]
         })
+    })
+    // 放置物体操作
+    dragManager.on('drop', (e) => {
+        const blocks = jsonData.value.blocks
+        if (!blocks.length) {
+            blocks.push({
+                id: new Date().getTime() + '',
+                top: 0,
+                left: 0,
+                translateX: 0,
+                translateY: 0,
+                zIndex: 1,
+                compName: currMoveBlock.value.compName,
+                width: 1,
+                height: 1,
+                compData: JSON.parse(JSON.stringify(currMoveBlock.value)),
+            })
+        }
     })
 })
 

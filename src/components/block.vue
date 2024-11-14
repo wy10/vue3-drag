@@ -20,6 +20,10 @@ const blockStyleFn = computed(() => {
     return {
         width: `${props.block.width * 800}px`,
         height: `${props.block.height * 800}px`,
+        position: 'absolute',
+        left: `${props.block.left * 800}px`,
+        top: `${props.block.top * 800}px`,
+        // 'pointer-events': 'none',
     }
 })
 

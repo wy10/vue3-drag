@@ -6,7 +6,17 @@
             <Left @start="startDrag" @end="endDrag" />
         </div>
         <div style="position: relative">
-            <Middle v-model="jsonData" id="middle" />
+            <div ref="dragContainer">
+                <Block
+                    v-for="item in blocks"
+                    :id="item.id"
+                    :key="item.id"
+                    :initX="item.translateX"
+                    :initY="item.translateY"
+                    :block="item"
+                >
+                </Block>
+            </div>
             <div
                 :style="{
                     ...divider,
@@ -30,175 +40,345 @@
     </div>
 </template>
 <script setup>
-import { computed, onMounted, provide, ref } from 'vue'
+import { computed, onMounted, provide, ref, nextTick, watch } from 'vue'
 import { focusBlocks, currentComp } from './hooks/useHooks'
 import Left from './components/left.vue'
 import Right from './components/right.vue'
-import Middle from './components/middle.vue'
+import Block from './components/block.vue'
 import jsonFile from './data.json'
 import { leftData } from './left.js'
 // {"id":1,"top":0,"left":0,"zIndex":1,"compName":"trade-table","width":800,"height":800}
+import DragManager from './drag/drag-manager'
+import SortManager from './drag/sort-manager'
+import { justPosition } from './hooks/usePositionHooks'
 
-let middleDom = null
-
+const dragContainer = ref(null)
+const currentDrag = ref(null)
 const comps = ref(leftData)
+const currBusiComp = ref(null)
+
+let dragManager = null
+let sortManager = null
+
+const renderElement = {
+    block: {
+        left: function (rangeBlock) {
+            const blocks = jsonData.value.blocks
+            const index = blocks.findIndex((item) => item.id == rangeBlock.id)
+            blocks[index] = {
+                ...blocks[index],
+                width: rangeBlock.width / 2,
+                top: rangeBlock.top,
+                left: rangeBlock.left + rangeBlock.width / 2,
+                translateX: 0,
+                translateY: 0,
+            }
+            blocks.splice(index, 0, {
+                id: new Date().getTime() + '',
+                top: rangeBlock.top,
+                left: rangeBlock.left,
+                translateX: 0,
+                translateY: 0,
+                compName: currBusiComp.value.compName,
+                width: rangeBlock.width / 2,
+                height: rangeBlock.height,
+                compData: JSON.parse(JSON.stringify(currBusiComp.value)),
+            })
+        },
+        right: function (rangeBlock) {
+            const blocks = jsonData.value.blocks
+            const index = blocks.findIndex((item) => item.id == rangeBlock.id)
+            blocks[index] = {
+                ...blocks[index],
+                width: rangeBlock.width / 2,
+                translateX: 0,
+                translateY: 0,
+            }
+            blocks.splice(index + 1, 0, {
+                id: new Date().getTime() + '',
+                top: rangeBlock.top,
+                left: rangeBlock.left + rangeBlock.width / 2,
+                translateX: 0,
+                translateY: 0,
+                compName: currBusiComp.value.compName,
+                width: rangeBlock.width / 2,
+                height: rangeBlock.height,
+                compData: JSON.parse(JSON.stringify(currBusiComp.value)),
+            })
+        },
+        top: function (rangeBlock) {
+            const blocks = jsonData.value.blocks
+            const index = blocks.findIndex((item) => item.id == rangeBlock.id)
+            blocks[index] = {
+                ...blocks[index],
+                top: rangeBlock.top + rangeBlock.height / 2,
+                height: rangeBlock.height / 2,
+                translateX: 0,
+                translateY: 0,
+            }
+            blocks.splice(index, 0, {
+                id: new Date().getTime() + '',
+                top: rangeBlock.top,
+                left: rangeBlock.left,
+                translateX: 0,
+                translateY: 0,
+                compName: currBusiComp.value.compName,
+                width: rangeBlock.width,
+                height: rangeBlock.height / 2,
+                compData: JSON.parse(JSON.stringify(currBusiComp.value)),
+            })
+        },
+        bottom: function (rangeBlock) {
+            const blocks = jsonData.value.blocks
+            const index = blocks.findIndex((item) => item.id == rangeBlock.id)
+            blocks[index] = {
+                ...blocks[index],
+                height: rangeBlock.height / 2,
+            }
+            blocks.splice(index + 1, 0, {
+                id: new Date().getTime() + '',
+                top: rangeBlock.top + rangeBlock.height / 2,
+                left: rangeBlock.left,
+                translateX: 0,
+                translateY: 0,
+                compName: currBusiComp.value.compName,
+                width: rangeBlock.width,
+                height: rangeBlock.height / 2,
+                compData: JSON.parse(JSON.stringify(currBusiComp.value)),
+            })
+        },
+    },
+}
 
 const jsonData = ref(JSON.parse(JSON.stringify(jsonFile)))
-const container = computed(() => {
-    return {
-        width: jsonData.value.container.width,
-        height: jsonData.value.container.height,
-    }
+
+const blocks = computed(() => {
+    return jsonData.value.blocks
 })
 
-const currMoveBlock = ref(null)
-const add = () => {
-    jsonData.value.container.width += 50
-    jsonData.value.container.height += 50
-}
-
-const dec = () => {
-    jsonData.value.container.width -= 50
-    jsonData.value.container.height -= 50
-}
-
-const renderContent = {
-    divider: function (block) {
-        const dividerWidth = block.width * container.value.width
-        const dividerHeight = block.height * container.value.height
-        return {
-            left: (x, y) => {
-                divider.value = {
-                    position: 'absolute',
-                    top: block.top + 'px',
-                    left: block.left + x + 'px',
-                    width: '0px',
-                    height: dividerHeight + 'px',
-                }
-            },
-            top: (x, y) => {
-                divider.value = {
-                    position: 'absolute',
-                    top: block.top + y + 'px',
-                    left: block.left + 'px',
-                    width: dividerWidth + 'px',
-                }
-            },
-            right: (x, y) => {
-                divider.value = {
-                    position: 'absolute',
-                    top: block.top + 'px',
-                    left: block.left + x + 'px',
-                    height: dividerHeight + 'px',
-                    width: '0px',
-                }
-            },
-            bottom: (x, y) => {
-                divider.value = {
-                    position: 'absolute',
-                    top: block.top + y + 'px',
-                    left: block.left + 'px',
-                    width: dividerWidth + 'px',
-                }
-            },
-        }
+watch(
+    () => blocks.value.length,
+    () => {
+        nextTick(() => {
+            Array.from(dragContainer.value.children).forEach((dom) => {
+                dragManager.addDrag(
+                    dom,
+                    dom.getAttribute('initX'),
+                    dom.getAttribute('initY'),
+                )
+            })
+        })
     },
-    block: function (block, y, direction) {
-        const blockWidth = block.width * container.value.width
-        const blockHeight = block.height * container.value.height
-        let id = new Date().getTime() + ''
-        let props = {}
-        if (currMoveBlock.value.type === 'table') {
-            props = {
-                ...currMoveBlock.value.props,
-                rows: {
-                    ...currMoveBlock.value.props.rows,
-                    value: ['left', 'right'].includes(direction)
-                        ? Math.floor((blockHeight - 40) / 41)
-                        : Math.floor((y - 40) / 41),
-                },
+    {
+        immediate: false,
+    },
+)
+
+onMounted(() => {
+    dragManager = new DragManager({
+        el: dragContainer.value,
+        width: 800,
+        height: 800,
+    })
+    // 在父盒子上监听物体移动事件
+    dragManager.resister()
+    sortManager = new SortManager(dragContainer.value)
+    Array.from(dragContainer.value.children).forEach((dom) => {
+        dragManager.addDrag(
+            dom,
+            dom.getAttribute('initX'),
+            dom.getAttribute('initY'),
+        )
+    })
+    dragManager.on('dragStart', (data) => {
+        // 将这个元素深拷贝，避免拖动过程中被改变
+        currentDrag.value = data.element.cloneNode(true)
+    })
+    dragManager.on('dragEnd', (data) => {
+        sortManager.reorder(data.element, currentDrag.value, (node1, node2) => {
+            const index1 = blocks.value.findIndex((item) => item.id == node1.id)
+            const index2 = blocks.value.findIndex((item) => item.id == node2.id)
+            // 交换index1 index2 的position,width,height,left,top
+            const temp = { ...jsonData.value.blocks[index1] }
+            const temp2 = { ...jsonData.value.blocks[index2] }
+            jsonData.value.blocks[index1] = {
+                ...temp,
+                left: temp2.left,
+                top: temp2.top,
+                width: temp2.width,
+                height: temp2.height,
             }
+            jsonData.value.blocks[index2] = {
+                ...temp2,
+                left: temp.left,
+                top: temp.top,
+                width: temp.width,
+                height: temp.height,
+            }
+        })
+    })
+    dragManager.on('dragover', (e) => {
+        // justPosition(e, blocks.value, renderContent['block'])
+    })
+    // 放置物体操作
+    dragManager.on('drop', (e) => {
+        const blocks = jsonData.value.blocks
+        if (!blocks.length) {
+            blocks.push({
+                id: new Date().getTime() + '',
+                top: 0,
+                left: 0,
+                translateX: 0,
+                translateY: 0,
+                zIndex: 1,
+                compName: currBusiComp.value.compName,
+                width: 1,
+                height: 1,
+                compData: JSON.parse(JSON.stringify(currBusiComp.value)),
+            })
+            return
         }
+        justPosition(e, blocks, renderElement['block'])
+    })
+})
 
-        return {
-            left: (x, y) => {
-                jsonData.value.blocks.push({
-                    id,
-                    parent: block.id,
-                    top: block.top,
-                    left: block.left,
-                    zIndex: 1,
-                    compName: currMoveBlock.value.compName,
-                    width: x / container.value.width,
-                    height: block.height,
-                    compData: JSON.parse(
-                        JSON.stringify({ ...currMoveBlock.value, props }),
-                    ),
-                })
-                block.left = block.left + x
-                block.width = x / container.value.width
-            },
+// const renderContent = {
+//     divider: function (block) {
+//         const dividerWidth = block.width * container.value.width
+//         const dividerHeight = block.height * container.value.height
+//         return {
+//             left: (x, y) => {
+//                 divider.value = {
+//                     position: 'absolute',
+//                     top: block.top + 'px',
+//                     left: block.left + x + 'px',
+//                     width: '0px',
+//                     height: dividerHeight + 'px',
+//                 }
+//             },
+//             top: (x, y) => {
+//                 divider.value = {
+//                     position: 'absolute',
+//                     top: block.top + y + 'px',
+//                     left: block.left + 'px',
+//                     width: dividerWidth + 'px',
+//                 }
+//             },
+//             right: (x, y) => {
+//                 divider.value = {
+//                     position: 'absolute',
+//                     top: block.top + 'px',
+//                     left: block.left + x + 'px',
+//                     height: dividerHeight + 'px',
+//                     width: '0px',
+//                 }
+//             },
+//             bottom: (x, y) => {
+//                 divider.value = {
+//                     position: 'absolute',
+//                     top: block.top + y + 'px',
+//                     left: block.left + 'px',
+//                     width: dividerWidth + 'px',
+//                 }
+//             },
+//         }
+//     },
+//     block: function (block, y, direction) {
+//         const blockWidth = block.width * container.value.width
+//         const blockHeight = block.height * container.value.height
+//         let id = new Date().getTime() + ''
+//         let props = {}
+//         if (currBusiComp.value.type === 'table') {
+//             props = {
+//                 ...currBusiComp.value.props,
+//                 rows: {
+//                     ...currBusiComp.value.props.rows,
+//                     value: ['left', 'right'].includes(direction)
+//                         ? Math.floor((blockHeight - 40) / 41)
+//                         : Math.floor((y - 40) / 41),
+//                 },
+//             }
+//         }
 
-            top: (x, y) => {
-                jsonData.value.blocks.push({
-                    id,
-                    parent: block.id,
-                    top: block.top,
-                    left: block.left,
-                    zIndex: 1,
-                    compName: currMoveBlock.value.compName,
-                    width: block.width,
-                    height: y / container.value.height,
-                    compData: JSON.parse(
-                        JSON.stringify({ ...currMoveBlock.value, props }),
-                    ),
-                })
-                block.top = block.top + y
-                block.height = y / container.value.height
-            },
-            right: (x, y) => {
-                jsonData.value.blocks.push({
-                    id,
-                    parent: block.id,
-                    top: block.top,
-                    left: block.left + x,
-                    zIndex: 1,
-                    compName: currMoveBlock.value.compName,
-                    width: x / container.value.width,
-                    height: block.height,
-                    compData: JSON.parse(
-                        JSON.stringify({ ...currMoveBlock.value, props }),
-                    ),
-                })
-                block.width = x / container.value.width
-            },
-            bottom: (x, y) => {
-                jsonData.value.blocks.push({
-                    id,
-                    parent: block.id,
-                    top: block.top + y,
-                    left: block.left,
-                    zIndex: 1,
-                    compName: currMoveBlock.value.compName,
-                    width: block.width,
-                    height: y / container.value.height,
-                    compData: JSON.parse(
-                        JSON.stringify({ ...currMoveBlock.value, props }),
-                    ),
-                })
-                block.height = y / container.value.height
-            },
-        }
-    },
-}
+//         return {
+//             left: (x, y) => {
+//                 jsonData.value.blocks.push({
+//                     id,
+//                     parent: block.id,
+//                     top: block.top,
+//                     left: block.left,
+//                     zIndex: 1,
+//                     compName: currBusiComp.value.compName,
+//                     width: x / container.value.width,
+//                     height: block.height,
+//                     compData: JSON.parse(
+//                         JSON.stringify({ ...currBusiComp.value, props }),
+//                     ),
+//                 })
+//                 block.left = block.left + x
+//                 block.width = x / container.value.width
+//             },
+
+//             top: (x, y) => {
+//                 jsonData.value.blocks.push({
+//                     id,
+//                     parent: block.id,
+//                     top: block.top,
+//                     left: block.left,
+//                     zIndex: 1,
+//                     compName: currBusiComp.value.compName,
+//                     width: block.width,
+//                     height: y / container.value.height,
+//                     compData: JSON.parse(
+//                         JSON.stringify({ ...currBusiComp.value, props }),
+//                     ),
+//                 })
+//                 block.top = block.top + y
+//                 block.height = y / container.value.height
+//             },
+//             right: (x, y) => {
+//                 jsonData.value.blocks.push({
+//                     id,
+//                     parent: block.id,
+//                     top: block.top,
+//                     left: block.left + x,
+//                     zIndex: 1,
+//                     compName: currBusiComp.value.compName,
+//                     width: x / container.value.width,
+//                     height: block.height,
+//                     compData: JSON.parse(
+//                         JSON.stringify({ ...currBusiComp.value, props }),
+//                     ),
+//                 })
+//                 block.width = x / container.value.width
+//             },
+//             bottom: (x, y) => {
+//                 jsonData.value.blocks.push({
+//                     id,
+//                     parent: block.id,
+//                     top: block.top + y,
+//                     left: block.left,
+//                     zIndex: 1,
+//                     compName: currBusiComp.value.compName,
+//                     width: block.width,
+//                     height: y / container.value.height,
+//                     compData: JSON.parse(
+//                         JSON.stringify({ ...currBusiComp.value, props }),
+//                     ),
+//                 })
+//                 block.height = y / container.value.height
+//             },
+//         }
+//     },
+// }
 
 const startDrag = (item) => {
-    currMoveBlock.value = item
+    currBusiComp.value = item
     const blocks = jsonData.value.blocks
     blocks.forEach((item) => (item.pointerEvent = 'none'))
 }
 const endDrag = () => {
-    currMoveBlock.value = null
+    currBusiComp.value = null
     const blocks = jsonData.value.blocks
     blocks.forEach((item) => (item.pointerEvent = 'auto'))
 }
@@ -215,116 +395,6 @@ const dividerShow = ref(false)
 
 provide('comps', comps)
 provide('jsonData', jsonData)
-
-const justPosition = (e, renderType) => {
-    const blocks = jsonData.value.blocks
-    let block = null
-    let start = {}
-    let end = {}
-    if (currMoveBlock.value) {
-        for (let i = 0; i < blocks.length; i++) {
-            // 1. 当前鼠标的范围处于什么组件
-            start = { x: blocks[i].left, y: blocks[i].top }
-            end = {
-                x: blocks[i].left + blocks[i].width * container.value.width,
-                y: blocks[i].top + blocks[i].height * container.value.height,
-            }
-            if (
-                e.offsetX >= start.x &&
-                e.offsetX <= end.x &&
-                e.offsetY >= start.y &&
-                e.offsetY <= end.y
-            ) {
-                block = blocks[i]
-                break
-            }
-        }
-        // 将图形对角线划分
-        let x = (block.width * container.value.width) / 2
-        let y = (block.height * container.value.height) / 2
-        let endY = 0
-
-        if (e.offsetX < block.left + x) {
-            endY = parseInt(((e.offsetX - block.left) * y) / x)
-        } else {
-            endY = parseInt(((block.left + block.width - e.offsetX) * y) / x)
-        }
-
-        if (
-            e.offsetX < start.x + x &&
-            (e.offsetY > start.y + endY) & (e.offsetY < end.y - endY)
-        ) {
-            console.log('xxxxxxxxxxleft')
-
-            // 在左边
-            renderContent[renderType](block, y, 'left').left(x, y)
-        } else if (
-            e.offsetX >= start.x + x &&
-            e.offsetY >= start.y + endY &&
-            e.offsetY <= end.y - endY
-        ) {
-            console.log('xxxxxxxxxxright', endY)
-            // 在右边
-            renderContent[renderType](block, y, 'right').right(x, y)
-        } else if (e.offsetY < start.y + endY) {
-            console.log('xxxxxxxxxxtop')
-            // 在上面
-            renderContent[renderType](block, y, 'top').top(x, y)
-        } else if (e.offsetY >= start.y + endY) {
-            console.log('xxxxxxxxxxbottom')
-            // 在下面
-            renderContent[renderType](block, y, 'bottom').bottom(x, y)
-        }
-    }
-}
-
-onMounted(() => {
-    middleDom = document.getElementById('middle')
-    middleDom.addEventListener('dragenter', (e) => {
-        e.dataTransfer.dropEffect = 'move'
-    })
-    middleDom.addEventListener('dragover', (e) => {
-        e.preventDefault()
-        e.dataTransfer.dropEffect = 'move'
-        if (jsonData.value.blocks.length) {
-            justPosition(e, 'divider')
-            dividerShow.value = true
-        }
-    })
-    middleDom.addEventListener('dragleave', (e) => {
-        e.dataTransfer.dropEffect = 'none'
-    })
-    middleDom.addEventListener('drop', (e) => {
-        // 改变jsonData对象
-        const blocks = jsonData.value.blocks
-        if (!blocks.length) {
-            blocks.push({
-                id: new Date().getTime() + '',
-                top: 0,
-                left: 0,
-                translateX: 0,
-                translateY: 0,
-                zIndex: 1,
-                compName: currMoveBlock.value.compName,
-                width: 1,
-                height: 1,
-                compData: JSON.parse(JSON.stringify(currMoveBlock.value)),
-            })
-        } else {
-            justPosition(e, 'block')
-        }
-        currentComp.value = blocks[blocks.length - 1]
-        // 自由移动
-        // jsonData.value.blocks.push({
-        //   top: e.offsetY,
-        //   left: e.offsetX,
-        //   zIndex: 1,
-        //   compName: currMoveBlock.value.compName,
-        //   alignCenter: true,
-        // });
-        dividerShow.value = false
-    })
-})
 </script>
 
 <style lang="less" scoped>
