@@ -1,11 +1,10 @@
 <template>
-    <div @click="add">+++</div>
-    <div @click="dec">---</div>
-    <div class="app" @click="clearAll">
+    <div class="app">
         <div>
             <Left @start="startDrag" @end="endDrag" />
         </div>
         <div style="position: relative">
+            <div class="cursor-box" ref="cursorRef"></div>
             <div ref="dragContainer">
                 <Block
                     v-for="item in blocks"
@@ -56,6 +55,8 @@ const dragContainer = ref(null)
 const currentDrag = ref(null)
 const comps = ref(leftData)
 const currBusiComp = ref(null)
+const cursorRef = ref(null)
+const dividerRef = ref({})
 
 let dragManager = null
 let sortManager = null
@@ -65,6 +66,7 @@ const renderElement = {
         left: function (rangeBlock) {
             const blocks = jsonData.value.blocks
             const index = blocks.findIndex((item) => item.id == rangeBlock.id)
+            console.log(rangeBlock, 'xx')
             blocks[index] = {
                 ...blocks[index],
                 width: rangeBlock.width / 2,
@@ -73,7 +75,7 @@ const renderElement = {
                 translateX: 0,
                 translateY: 0,
             }
-            blocks.splice(index, 0, {
+            blocks.push({
                 id: new Date().getTime() + '',
                 top: rangeBlock.top,
                 left: rangeBlock.left,
@@ -94,7 +96,7 @@ const renderElement = {
                 translateX: 0,
                 translateY: 0,
             }
-            blocks.splice(index + 1, 0, {
+            blocks.push({
                 id: new Date().getTime() + '',
                 top: rangeBlock.top,
                 left: rangeBlock.left + rangeBlock.width / 2,
@@ -116,7 +118,7 @@ const renderElement = {
                 translateX: 0,
                 translateY: 0,
             }
-            blocks.splice(index, 0, {
+            blocks.push({
                 id: new Date().getTime() + '',
                 top: rangeBlock.top,
                 left: rangeBlock.left,
@@ -135,7 +137,7 @@ const renderElement = {
                 ...blocks[index],
                 height: rangeBlock.height / 2,
             }
-            blocks.splice(index + 1, 0, {
+            blocks.push({
                 id: new Date().getTime() + '',
                 top: rangeBlock.top + rangeBlock.height / 2,
                 left: rangeBlock.left,
@@ -190,35 +192,52 @@ onMounted(() => {
             dom.getAttribute('initY'),
         )
     })
-    dragManager.on('dragStart', (data) => {
+    dragManager.on('dragStart', ({ element, offsetX, offsetY }) => {
         // 将这个元素深拷贝，避免拖动过程中被改变
-        currentDrag.value = data.element.cloneNode(true)
+        currentDrag.value = element.cloneNode(true)
+        // 改变鼠标盒子指针的位置，后期使用translate渲染，避免盒子闪烁
+        cursorRef.value.style.left = `${offsetX}px`
+        cursorRef.value.style.top = `${offsetY}px`
+        cursorRef.value.style.display = 'block'
     })
     dragManager.on('dragEnd', (data) => {
-        sortManager.reorder(data.element, currentDrag.value, (node1, node2) => {
-            const index1 = blocks.value.findIndex((item) => item.id == node1.id)
-            const index2 = blocks.value.findIndex((item) => item.id == node2.id)
-            // 交换index1 index2 的position,width,height,left,top
-            const temp = { ...jsonData.value.blocks[index1] }
-            const temp2 = { ...jsonData.value.blocks[index2] }
-            jsonData.value.blocks[index1] = {
-                ...temp,
-                left: temp2.left,
-                top: temp2.top,
-                width: temp2.width,
-                height: temp2.height,
-            }
-            jsonData.value.blocks[index2] = {
-                ...temp2,
-                left: temp.left,
-                top: temp.top,
-                width: temp.width,
-                height: temp.height,
-            }
-        })
+        sortManager.reorder(
+            cursorRef.value,
+            data.element,
+            currentDrag.value,
+            (node1, node2) => {
+                const index1 = blocks.value.findIndex(
+                    (item) => item.id == node1.id,
+                )
+                const index2 = blocks.value.findIndex(
+                    (item) => item.id == node2.id,
+                )
+                // 交换index1 index2 的position,width,height,left,top
+                const temp = { ...jsonData.value.blocks[index1] }
+                const temp2 = { ...jsonData.value.blocks[index2] }
+                jsonData.value.blocks[index1] = {
+                    ...temp,
+                    left: temp2.left,
+                    top: temp2.top,
+                    width: temp2.width,
+                    height: temp2.height,
+                }
+                jsonData.value.blocks[index2] = {
+                    ...temp2,
+                    left: temp.left,
+                    top: temp.top,
+                    width: temp.width,
+                    height: temp.height,
+                }
+            },
+        )
+        cursorRef.value.style.display = 'none'
     })
     dragManager.on('dragover', (e) => {
         // justPosition(e, blocks.value, renderContent['block'])
+    })
+    dragManager.on('dragMove', ({ element, x, y, offsetX, offsetY }) => {
+        cursorRef.value.style.transform = `translate(${x}px, ${y}px)`
     })
     // 放置物体操作
     dragManager.on('drop', (e) => {
@@ -238,7 +257,7 @@ onMounted(() => {
             })
             return
         }
-        justPosition(e, blocks, renderElement['block'])
+        justPosition(e, dragContainer.value, blocks, renderElement['block'])
     })
 })
 
@@ -374,24 +393,10 @@ onMounted(() => {
 
 const startDrag = (item) => {
     currBusiComp.value = item
-    const blocks = jsonData.value.blocks
-    blocks.forEach((item) => (item.pointerEvent = 'none'))
 }
 const endDrag = () => {
     currBusiComp.value = null
-    const blocks = jsonData.value.blocks
-    blocks.forEach((item) => (item.pointerEvent = 'auto'))
 }
-
-const clearAll = () => {
-    jsonData.value.blocks.forEach((item) => {
-        item.focus = false
-    })
-    focusBlocks.value = []
-}
-
-const divider = ref({})
-const dividerShow = ref(false)
 
 provide('comps', comps)
 provide('jsonData', jsonData)
@@ -404,12 +409,20 @@ provide('jsonData', jsonData)
         width: 300px;
     }
     & > div:nth-child(2) {
-        flex: 1;
+        //flex: 1;
         margin: 10px;
         border: 1px solid #ccc;
     }
     & > div:last-child {
         width: 300px;
+    }
+    .cursor-box {
+        position: absolute;
+        border: 1px solid red;
+        width: 20px;
+        height: 10px;
+        z-index: 2;
+        display: none;
     }
 }
 </style>

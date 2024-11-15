@@ -3,10 +3,13 @@ class SortManager {
     constructor(container) {
         this.container = container
     }
-    reorder(moveEle, startEle, callBack) {
+    reorder(detectEle, moveEle, startEle, callBack) {
         const childEles = Array.from(this.container!.children)
         childEles.forEach((childEle) => {
-            if (childEle !== moveEle && this.isOverlapping(childEle, moveEle)) {
+            if (
+                childEle !== moveEle &&
+                this.isOverlapping(childEle, detectEle)
+            ) {
                 const tr1 = childEle.style.transform
                 const tr2 = startEle.style.transform
                 childEle.style.transform = tr2

@@ -62,7 +62,13 @@ class DragManager extends EventEmitter {
         const matrix = new DOMMatrix(this.currentDrag!.style.transform)
         this.initialTranslateX = matrix.m41
         this.initialTranslateY = matrix.m42
-        this.emit('dragStart', { element: this.currentDrag })
+        const rect = this.app.el!.getBoundingClientRect()
+        this.emit('dragStart', {
+            element: this.currentDrag,
+            offsetX: e.clientX - rect.left,
+            offsetY: e.clientY - rect.top,
+        })
+
         document.addEventListener('mousemove', this._onDragMove)
         document.addEventListener('mouseup', this._onDragEnd)
         document.addEventListener('touchmove', this._onDragMove)
@@ -74,9 +80,18 @@ class DragManager extends EventEmitter {
         const moveY = (e.clientY || e.touches[0].clientY) - this.startY
         const realX = this.initialTranslateX + moveX
         const realY = this.initialTranslateY + moveY
-        this.currentDrag.style.transform = `translate(${realX}px, ${realY}px)`
-        this.emit('dragMove', { element: this.currentDrag, x: realX, y: realY })
+        console.log(e.clientX, 'xxxx')
+        // this.currentDrag.style.transform = `translate(${realX}px, ${realY}px)`
+        const rect = this.app.el!.getBoundingClientRect()
+        this.emit('dragMove', {
+            element: this.currentDrag,
+            x: moveX,
+            y: moveY,
+            offsetX: e.clientX - rect.left,
+            offsetY: e.clientY - rect.top,
+        })
     }
+
     public onDragEnd() {
         if (this.currentDrag) {
             this.emit('dragEnd', { element: this.currentDrag })
